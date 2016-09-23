@@ -12,6 +12,10 @@ class VerifyCsrfToken extends BaseVerifier
      * @var array
      */
     protected $except = [
-        //
+        'bootgrid',//added by Sriya Banerjee
+        'loginController',
+        'editUserProfile'
     ];
+    
+
 }
