@@ -51,21 +51,50 @@ class ListController extends Controller
     public function testBootGrid(Request $request)
     {
         $object=DetailList::$details;//Fetch users data
-       /** if(!empty($request->input('sort')))
+        if($request->input('sort'))
         {
-            $sortArr=$request->input('sort');
-            foreach($sortArr as $key=>$val)
+            $object1=array();
+            $var= $request->input('sort');
+            foreach($var as $key=>$val)
             {
-                $index=$key;
-                $order=$val;
+                $sort= $key;
             }
-            if($order=="asc")
+            foreach($object as $key=>$val)
             {
-                usort($myArray, function($a, $b) {
-                return $a['order'] - $b['order'];
-});
+                foreach($val as $innerKey=>$innerVal)
+                {
+                    if($innerKey==$sort)
+                        array_push($object1,$innerVal);
+                }
             }
-        }*/
+            sort($object1);
+            /**for($i=0; $i<count($object1);$i++)
+                echo $object1[$i];**/
+            $object2=array(array());
+            $i=0;
+            for($i=0; $i<count($object1);$i++)
+            {
+            foreach($object as $key=>$val)
+            {
+               foreach($val as $innerKey=>$innerVal)
+                {
+                    if($innerKey==$sort && $innerVal==$object1[$i])
+                    {
+                        array_push($object2,$val);
+                        
+                    }
+                }
+            }
+            }
+            $object=$object2;
+        }
+        /**foreach($object2 as $key=>$val)
+            {
+               foreach($val as $innerKey=>$innerVal)
+                {
+                    echo $innerVal;
+                }
+            }*/
         $search = $request->input('searchPhrase');
         if($search=="")
         {

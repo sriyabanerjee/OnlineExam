@@ -14,7 +14,21 @@ class VerifyCsrfToken extends BaseVerifier
     protected $except = [
         'bootgrid',//added by Sriya Banerjee
         'loginController',
-        'editUserProfile'
+        'editUserProfile',
+        'showUsersList',
+        'usersByRecordID',
+        'editUserProfileModal',
+        'deleteuserByRecordID',
+        'adduser',
+        'confirmation',
+        'setPassword/{activationCode}',
+        'categories',
+        'edit.categories',
+        'deletecategories',
+        'findAllcategories',
+        'showQuestion',
+        'showsQuestion',
+        'editQuestion'
     ];
     
 

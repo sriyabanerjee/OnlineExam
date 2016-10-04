@@ -1,15 +1,14 @@
 <?php
 
 namespace App;
-
 use \FileMaker;
 use Config;
 use Log;
 
 
-class Questions 
+class Categories 
 {
-    protected $layout_name='QNS';
+    protected $layout_name='Category';
     protected $fmCon = '';
     
     public function __construct()
@@ -33,16 +32,15 @@ class Questions
             
     }
     /**
-     * To add Question
+     * To add category
      * @return void
      * 
      */
-    public function addQuestion($description,$category,$marks)
+    public function addCategory($category)
     {
         $record = $this->fmCon->createRecord($this->layout_name);
-        $record -> setfield('xt_description',$description);
         $record -> setfield('xt_category',$category);
-        $record -> setfield('xn_marks',$marks);
+        
         if(FileMaker::isError($record))//if any error presents, then print it and exist
         {
            //dd( $result->getMessage());
@@ -51,32 +49,42 @@ class Questions
         $result = $record -> commit();
         return 1;
     }
-    public function showQuestionsList($sortColumn,$sortOrder,$search)
+    public function doEditUserDetails($id,$name)
+    {
+        $editRecord = $this->fmCon->newEditCommand($this->layout_name,$id);
+        $editRecord -> setfield('xt_category',$name);
+        
+        $result = $editRecord -> execute();
+        if(FileMaker::isError($result))
+        {
+           Log::error( $result->getMessage());
+           return 0;
+        }
+        
+            return 1;
+        
+    }
+    public function showCategoryList($sortColumn,$sortOrder,$search)
     {
         if($search){
          $request1 = $this->fmCon->newFindRequest($this->layout_name);
         $request1 -> addFindCriterion('pk_ID',$search);
         
         $request2= $this->fmCon->newFindRequest($this->layout_name);
-        $request2 -> addFindCriterion('xt_description','=='.$search);
-        
-        $request3= $this->fmCon->newFindRequest($this->layout_name);
-        $request3 -> addFindCriterion('xt_category','=='.$search);
-        
-        $request4= $this->fmCon->newFindRequest($this->layout_name);
-        $request4 -> addFindCriterion('xn_marks','=='.$search);
+        $request2 -> addFindCriterion('xt_category','=='.$search);
         
         $compoundFind = $this->fmCon->newCompoundFindCommand($this->layout_name);
         $compoundFind->add(1,$request1);
         $compoundFind->add(2,$request2);
-        $compoundFind->add(3,$request2);
-        $compoundFind->add(4,$request2);
         
         $compoundFind->addSortRule($sortColumn,1,$sortOrder);
         $max = $_POST['rowCount'];
-        $current = $_POST['current'];
-        $compoundFind->setRange(($current-1)*$max, $max);
-        $_POST['current']=$current+1;
+            $current = $_POST['current'];
+            //echo $current;
+            //if(!isset($current)) { $current = 0; }
+            
+                $compoundFind->setRange(($current-1)*$max, $max);
+            $_POST['current']=$current+1;
         $result=$compoundFind->execute();
         }
         else
@@ -86,6 +94,9 @@ class Questions
             $request->addSortRule($sortColumn,1,$sortOrder);
             $max = $_POST['rowCount'];
             $current = $_POST['current'];
+            //echo $current;
+            //if(!isset($current)) { $current = 0; }
+            
             $request->setRange(($current-1)*$max, $max);
             $_POST['current']=$current+1;
             $result=$request->execute();
@@ -129,41 +140,12 @@ class Questions
          return $val;
     }
     /**
-     * Getting user's details by record ID
-     * @return 0 if user not found
-     * @return arrray containg user's details
-     * @param number record ID of the user
-     */
-    public function findQuestionByRecordID($ID)
-    {
-        $records = $this->fmCon->getRecordById($this->layout_name,$ID);
-        if(FileMaker::isError($records))
-        {
-           error_log($records);
-           return 0;
-        }
-        $layout_object = $this->fmCon->getLayout($this->layout_name);
-        $field_objects=$layout_object->getFields();
-        $arr2=array(array());
-        $i=0;
-        $arr=array();
-        $arr['recordID']=$records->getRecordId();
-        foreach($field_objects as $field_object)
-        {
-			$index= $field_object->getName();
-			$val= $records->getField($field_object->getName());
-            $arr[$index]=$val;
-        }
-        
-        return $arr;
-    }
-    /**
      * Delete user by Record ID
      * @return true if sucess
      * @return false if failure
      * @param number record ID of the user
      */
-    public function deleteQuestionByRecordID($ID)
+    public function deleteCategoryByRecordID($ID)
     {
         $deleteRecord = $this->fmCon->newDeleteCommand($this->layout_name,$ID);
         $result = $deleteRecord->execute();
@@ -175,52 +157,28 @@ class Questions
         }
         return true;
     }
-    public function doEditQuestionDetails($id,$description,$category,$marks)
-    {
-        $editRecord = $this->fmCon->newEditCommand($this->layout_name,$id);
-        $editRecord -> setfield('xt_description',$description);
-        $editRecord -> setfield('xt_category',$category);
-        $editRecord -> setfield('xn_marks',$marks);
-        $result = $editRecord -> execute();
-        if(FileMaker::isError($result))
-        {
-           Log::error( $result->getMessage());
-           return 0;
-        }
-        
-            return 1;
-        
-    }
-    public function searchQuestions()
+    public function findAllCategoryNames()
     {
         $request=$this->fmCon->newFindAllCommand($this->layout_name);
         $result = $request->execute();
-        $arr2=array(array());
+        $categoryNames=array();
         if(FileMaker::isError($result))
         {
             
            Log::error( $result->getMessage());
-           return $arr2;
+           return $categoryNames;
         }
         $records=$result->getRecords();
-        
+        $categoryNames=array();
         $layout_object = $this->fmCon->getLayout($this->layout_name);
         $field_objects=$layout_object->getFields();
-        
-        $i=0;
-        $arr=array();
+        $index=0;
         foreach($records as $returnval)
 		{
+           $val= $returnval->getField('xt_category');
+            $categoryNames[$index++]=$val;
             
-			foreach($field_objects as $field_object)
-            {
-			$index= $field_object->getName();
-			$val= $returnval->getField($field_object->getName());
-            $arr[$index]=$val;
-            }
-            $arr2[$i]=$arr;
-            $i++;
-		}
-        return $arr2;
+        }
+        return $categoryNames;
     }
 }
